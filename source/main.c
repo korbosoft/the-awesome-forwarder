@@ -53,6 +53,7 @@ struct __argv args;
 char *a_argv[MAX_ARGV];
 char *meta_buf = NULL;
 u8 *icon_buf = NULL;
+u8 *splash_buf = NULL;
 
 // extern void __exception_setreload(int t);
 
@@ -168,7 +169,7 @@ void load_meta(const char *exe_path)
 	}
 }
 
-int load_icon(const char *exe_path)
+void load_icon(const char *exe_path)
 {
 	char icon_path[ISFS_MAXPATH] ATTRIBUTE_ALIGN(32);
 	memset(icon_path, 0, ISFS_MAXPATH);
@@ -189,7 +190,6 @@ int load_icon(const char *exe_path)
 			ISFS_Read(fd, icon_buf, filesize);
 		}
 		ISFS_Close(fd);
-		return 0;
 	}
 	else
 	{
@@ -206,10 +206,49 @@ int load_icon(const char *exe_path)
 				fread(icon_buf, 1, iconSize, iconFile);
 			}
 			fclose(iconFile);
-			return 0;
 		}
 	}
-	return -1;
+}
+
+void load_splash(const char *exe_path)
+{
+	char splash_path[ISFS_MAXPATH] ATTRIBUTE_ALIGN(32);
+	memset(splash_path, 0, ISFS_MAXPATH);
+	const char *p;
+
+	p = strrchr(exe_path, '/');
+	snprintf(splash_path, sizeof(splash_path), "%.*ssplash.png", p ? p-exe_path+1 : 0, exe_path);
+
+	s32 fd = ISFS_Open(splash_path, ISFS_OPEN_READ);
+	if(fd >= 0)
+	{
+		s32 filesize = ISFS_Seek(fd, 0, SEEK_END);
+		ISFS_Seek(fd, 0, SEEK_SET);
+		if(filesize)
+		{
+			splash_buf = (u8*)memalign(32, filesize + 1);
+			memset(splash_buf, 0, filesize + 1);
+			ISFS_Read(fd, splash_buf, filesize);
+		}
+		ISFS_Close(fd);
+	}
+	else
+	{
+		FILE *splashFile = fopen(splash_path ,"rb");
+		if(splashFile)
+		{
+			fseek(splashFile, 0, SEEK_END);
+			u32 splashSize = ftell(splashFile);
+			rewind(splashFile);
+			if(splashSize)
+			{
+				splash_buf = (u8*)memalign(32, splashSize + 1);
+				memset(splash_buf, 0, splashSize + 1);
+				fread(splash_buf, 1, splashSize, splashFile);
+			}
+			fclose(splashFile);
+		}
+	}
 }
 
 void strip_comments(char *buf)
@@ -353,13 +392,15 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	u8 * imgdata = GetImageData();
+	load_splash(full_path);
+	u8 * imgdata = GetImageData(splash_buf);
 	load_icon(full_path);
-	fadein(imgdata, icon_buf);
+	u8 * icondata = GetIconData(icon_buf);
+	fadein(imgdata, icondata);
 
 	WPAD_Init();
 
-	fadeout(imgdata, icon_buf);
+	fadeout(imgdata, icondata);
 	DeInitDevices();
 	StopGX();
 	free(imgdata);

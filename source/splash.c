@@ -1,8 +1,11 @@
+#include "config.h"
+
+#ifdef SPLASH
+
 #include <malloc.h>
+#include <gccore.h>
 #include "pngu.h"
 #include "video.h"
-
-#include "splash.h"
 
 #include "background_png.h"
 #include "icon_fallback_png.h"
@@ -106,3 +109,5 @@ void fadeout(u8 * bgdata, u8 * icondata)
 		Background_Show(0, 0, 0, bgdata, icondata, i);
 	}
 }
+
+#endif

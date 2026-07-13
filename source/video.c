@@ -6,6 +6,10 @@
  * Video routines
  ***************************************************************************/
 
+#include "config.h"
+
+#ifdef SPLASH
+
 #include <gccore.h>
 #include <ogcsys.h>
 #include <stdio.h>
@@ -203,15 +207,18 @@ void Menu_DrawImg(f32 xpos, f32 ypos, f32 zpos, u16 width, u16 height, u8 data[]
 	GX_SetVtxDesc(GX_VA_TEX0, GX_NONE);
 }
 
+/****************************************************************************
+ * Menu_DrawQuad
+ *
+ * Draws a quad on screen using GX
+ ***************************************************************************/
 void Menu_DrawQuad(u8 r, u8 g, u8 b, u8 alpha)
 {
 	GX_SetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_NONE);
 
-	// Load the clean base matrix layout structure directly
 	GX_LoadPosMtxImm(GXmodelView2D, GX_PNMTX0);
 
-	// Draw directly mapping the full screen size limits
 	GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
 	GX_Position2s16(0, 0);
 	GX_Color4u8(r, g, b, alpha);
@@ -226,3 +233,5 @@ void Menu_DrawQuad(u8 r, u8 g, u8 b, u8 alpha)
 	GX_Color4u8(r, g, b, alpha);
 	GX_End();
 }
+
+#endif

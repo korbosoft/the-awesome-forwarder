@@ -14,9 +14,6 @@
 
 #include <ogcsys.h>
 
-extern int screenwidth;
-extern int screenheight;
-
 void InitVideo(void);
 void StopGX(void);
 void ResetVideo_Menu(void);

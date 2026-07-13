@@ -396,14 +396,24 @@ int main(int argc, char *argv[])
 
 #ifdef SPLASH
 	load_splash(full_path);
-	u8 * imgdata = GetImageData(splash_buf);
-	load_icon(full_path);
-	u8 * icondata = GetIconData(icon_buf);
-	fadein(imgdata, icondata);
+	u8 * bgdata = GetImageData(splash_buf);
+	u8 * icondata = NULL;
+	if (bgdata) {
+		load_icon(full_path);
+		icondata = GetIconData(icon_buf);
+	}
+#ifdef SPLASH_FADE_IN
+	fadein(bgdata, icondata);
+#else
+	Background_Show(0, 0, 0, bgdata, icondata);
+#endif
 
-	fadeout(imgdata, icondata);
+#ifdef SPLASH_FADE_OUT
+	fadeout(bgdata, icondata);
+#endif
+
 	StopGX();
-	free(imgdata);
+	free(bgdata);
 #endif
 
 	DeInitDevices();

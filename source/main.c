@@ -30,13 +30,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <ogc/machine/processor.h>
-#include <wiiuse/wpad.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "background_image.h"
+#include "splash.h"
 #include "devicemounter.h"
 #include "video.h"
 
@@ -58,8 +57,7 @@ u8 *splash_buf = NULL;
 // extern void __exception_setreload(int t);
 
 typedef void (*entrypoint) (void);
-extern const u8 app_booter_bin[];
-extern const u32 app_booter_bin_size;
+#include "app_booter_bin.h"
 
 #define PATH_COUNT 2
 static const char *Paths[PATH_COUNT] = { "/apps/usbloader_gx/boot.dol", "/apps/usbloader_gx/boot.elf" };
@@ -169,6 +167,7 @@ void load_meta(const char *exe_path)
 	}
 }
 
+#ifdef SPLASH
 void load_icon(const char *exe_path)
 {
 	char icon_path[ISFS_MAXPATH] ATTRIBUTE_ALIGN(32);
@@ -250,6 +249,7 @@ void load_splash(const char *exe_path)
 		}
 	}
 }
+#endif
 
 void strip_comments(char *buf)
 {
@@ -332,8 +332,10 @@ int main(int argc, char *argv[])
 	u32 cookie;
 	entrypoint exeEntryPoint;
 
+#ifdef SPLASH
 	/* Initialize video layout structures */
 	InitVideo();
+#endif
 
 	char full_path[ISFS_MAXPATH] ATTRIBUTE_ALIGN(32);
 	memset(full_path, 0, ISFS_MAXPATH);
@@ -392,18 +394,19 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#ifdef SPLASH
 	load_splash(full_path);
 	u8 * imgdata = GetImageData(splash_buf);
 	load_icon(full_path);
 	u8 * icondata = GetIconData(icon_buf);
 	fadein(imgdata, icondata);
 
-	WPAD_Init();
-
 	fadeout(imgdata, icondata);
-	DeInitDevices();
 	StopGX();
 	free(imgdata);
+#endif
+
+	DeInitDevices();
 
 	if(!FileFound)
 	{

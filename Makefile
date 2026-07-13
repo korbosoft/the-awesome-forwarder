@@ -139,19 +139,19 @@ $(OUTPUT).elf: $(OFILES)
 #---------------------------------------------------------------------------------
 %.png.o : %.png
 	@echo $(notdir $<)
-	@bin2s -a 32 $< | $(AS) -o $(@)
+	@$(bin2o)
 
 %.dol.o : %.dol
 	@echo $(notdir $<)
-	@bin2s -a 32 $< | $(AS) -o $(@)
+	@$(bin2o)
 
 %.elf.o : %.elf
 	@echo $(notdir $<)
-	@bin2s -a 32 $< | $(AS) -o $(@)
+	@$(bin2o)
 
 %.bin.o : %.bin
 	@echo $(notdir $<)
-	@bin2s -a 32 $< | $(AS) -o $(@)
+	@$(bin2o)
 
 -include $(DEPENDS)
 

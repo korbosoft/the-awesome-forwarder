@@ -1,7 +1,11 @@
 #include <malloc.h>
 #include "pngu.h"
 #include "video.h"
-#include "filelist.h"
+
+#include "splash.h"
+
+#include "background_png.h"
+#include "icon_fallback_png.h"
 
 static int imagewidth = 0;
 static int imageheight = 0;
@@ -11,7 +15,7 @@ u8 * GetImageData(u8 * splash)
     PNGUPROP imgProp;
     IMGCTX ctx;
 	u8 * data = NULL;
-	if (splash != NULL) {
+	if (splash) {
 		ctx = PNGU_SelectImageFromBuffer(splash);
 		customSplash = true;
 	} else {
@@ -47,10 +51,7 @@ u8 * GetIconData(u8 *png)
 	IMGCTX ctx;
 	u8 * data = NULL;
 
-	if (!png)
-		return NULL;
-
-	ctx = PNGU_SelectImageFromBuffer(png);
+	ctx = PNGU_SelectImageFromBuffer(png ?: icon_fallback_png);
 	if (!ctx)
 		return NULL;
 
@@ -71,20 +72,15 @@ u8 * GetIconData(u8 *png)
 	return data;
 }
 
-void Background_Show(float x, float y, float z, u8 * bgdata, u8 * icondata, float angle, float scaleX, float scaleY, u8 alpha)
+void Background_Show(float x, float y, float z, u8 * bgdata, u8 * icondata, u8 alpha)
 {
-    //16:9 to 4:3 correction if needed
-    if(CONF_GetAspectRatio() != CONF_ASPECT_16_9)
-    {
-        scaleX *= 640.0f/720.0f;
-        x += (imagewidth*scaleX - imagewidth)/2.0f;
-    }
+	Menu_DrawImg(x, y, z, imagewidth, imageheight, bgdata);
 
-	/* Draw image */
-	Menu_DrawImg(x, y, z, imagewidth, imageheight, bgdata, angle, scaleX, scaleY, alpha);
 	if (!customSplash)
-		Menu_DrawImg(x+295, y+197, z, 128, 48, icondata, angle, scaleX, scaleY, alpha);
-    Menu_Render();
+		Menu_DrawImg(x + 255.0f, y + 197.0f, z, 128, 48, icondata);
+
+	Menu_DrawQuad(0, 0, 0, alpha);
+	Menu_Render();
 }
 
 void fadein(u8 * bgdata, u8 * icondata)
@@ -92,10 +88,10 @@ void fadein(u8 * bgdata, u8 * icondata)
 	int i;
 
 	/* fadein of image */
-	for(i = 0; i < 255; i = i+10)
+	for(i = 255; i > 0; i -= 10)
 	{
 		if(i>255) i = 255;
-		Background_Show(0, 0, 0, bgdata, icondata, 0, 1, 1, i);
+		Background_Show(0, 0, 0, bgdata, icondata, i);
 	}
 }
 
@@ -103,10 +99,10 @@ void fadeout(u8 * bgdata, u8 * icondata)
 {
 	int i;
 
-	/* fadeoout of image */
-	for(i = 255; i > 1; i = i-7)
+	/* fadeout of image */
+	for(i = 0; i < 255; i += 7)
 	{
 		if(i < 0) i = 0;
-		Background_Show(0, 0, 0, bgdata, icondata, 0, 1, 1, i);
+		Background_Show(0, 0, 0, bgdata, icondata, i);
 	}
 }

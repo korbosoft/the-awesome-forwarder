@@ -69,11 +69,13 @@ static const char* const PATHS[PATH_COUNT] = {
 
 void SystemMenu()
 {
+	// Priiloader code disabled to respect user settings
+
 	/* If priiloader is installed say return to system menu */
-	*Priiloader_CFG1 = 0x50756E65;
-	DCFlushRange((void*)Priiloader_CFG1, 4);
-	*Priiloader_CFG2 = 0x50756E65;
-	DCFlushRange((void*)Priiloader_CFG2, 4);
+	// *Priiloader_CFG1 = 0x50756E65;
+	// DCFlushRange((void*)Priiloader_CFG1, 4);
+	// *Priiloader_CFG2 = 0x50756E65;
+	// DCFlushRange((void*)Priiloader_CFG2, 4);
 	/* Use Return to Menu to exit */
 	SYS_ResetSystem(SYS_RETURNTOMENU, 0, 0);
 }

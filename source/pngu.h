@@ -1,3 +1,5 @@
+#ifdef SPLASH
+
 /********************************************************************************************
 
 PNGU Version : 0.2a
@@ -165,6 +167,8 @@ int PNGU_EncodeFromEFB (IMGCTX ctx, uint32_t width, uint32_t height, uint32_t st
 
 #ifdef __cplusplus
 	}
+#endif
+
 #endif
 
 #endif

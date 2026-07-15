@@ -1,13 +1,15 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define SPLASH // comment this out to disable splash screen
+// force loading sysmenu if priiloader is installed
+#define PRIILOADER_FORCE_SYSMENU
 
-#ifdef SPLASH
+// 1-255 dictates fade speed (per frame)
+// 0 disables fade-in
+#define SPLASH_FADE_IN 10
 
-#define SPLASH_FADE_IN
-#define SPLASH_FADE_OUT
-
-#endif
+// 1-255 dictates fade speed (per frame)
+// 0 disables fade-out
+#define SPLASH_FADE_OUT 7
 
 #endif

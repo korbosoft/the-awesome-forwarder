@@ -1,3 +1,5 @@
+#ifdef SPLASH
+
 /********************************************************************************************
 
 PNGU Version : 0.2a
@@ -1267,7 +1269,6 @@ void pngu_read_data_from_buffer (png_structp png_ptr, png_bytep data, png_size_t
 	ctx->cursor += length;
 }
 
-
 // Custom data writer function used for writing to memory buffers.
 void pngu_write_data_to_buffer (png_structp png_ptr, png_bytep data, png_size_t length)
 {
@@ -1294,3 +1295,5 @@ int pngu_clamp (int value, int min, int max)
 
 	return value;
 }
+
+#endif

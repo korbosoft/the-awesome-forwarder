@@ -69,15 +69,15 @@ static const char* const PATHS[PATH_COUNT] = {
 
 void SystemMenu()
 {
-	// Priiloader code disabled to respect user settings
-
 	/* If priiloader is installed say return to system menu */
-	// *Priiloader_CFG1 = 0x50756E65;
-	// DCFlushRange((void*)Priiloader_CFG1, 4);
-	// *Priiloader_CFG2 = 0x50756E65;
-	// DCFlushRange((void*)Priiloader_CFG2, 4);
+#ifdef PRIILOADER_FORCE_SYSMENU
+	*Priiloader_CFG1 = 0x50756E65;
+	DCFlushRange((void*)Priiloader_CFG1, 4);
+	*Priiloader_CFG2 = 0x50756E65;
+	DCFlushRange((void*)Priiloader_CFG2, 4);
 	/* Use Return to Menu to exit */
 	SYS_ResetSystem(SYS_RETURNTOMENU, 0, 0);
+#endif
 }
 
 static bool IsDollZ(u8 *buf)
@@ -338,37 +338,31 @@ int main(int argc, char *argv[])
 {
 	u32 cookie;
 	entrypoint exeEntryPoint;
+	char full_path[ISFS_MAXPATH] ATTRIBUTE_ALIGN(32);
+	memset(full_path, 0, ISFS_MAXPATH);
+
+	s32 isfs_fd = -1;
+	FILE *fat_file = NULL;
+	bool FileFound = false;
 
 #ifdef SPLASH
-	/* Initialize video layout structures */
 	InitVideo();
 #endif
 
-	char full_path[ISFS_MAXPATH] ATTRIBUTE_ALIGN(32);
-	memset(full_path, 0, ISFS_MAXPATH);
-	bool FileFound = false;
-
-	/* Try NAND (neek2o) first */
 	ISFS_Initialize();
+
 	for(u8 i = 0; i < PATH_COUNT; i++)
 	{
 		strcpy(full_path, PATHS[i]);
 		s32 fd = ISFS_Open(full_path, ISFS_OPEN_READ);
 		if(fd >= 0)
 		{
-			s32 filesize = ISFS_Seek(fd, 0, SEEK_END);
-			ISFS_Seek(fd, 0, SEEK_SET);
-			if(filesize)
-			{
-				ISFS_Read(fd, EXECUTE_ADDR, filesize);
-				FileFound = true;
-			}
-			ISFS_Close(fd);
+			isfs_fd = fd;
+			FileFound = true;
 			break;
 		}
 	}
 
-	/* Try External Storage Devices (SD then USB) if not on NAND */
 	if(!FileFound)
 	{
 		bool DeviceFound = false;
@@ -385,43 +379,63 @@ int main(int argc, char *argv[])
 				FILE *exeFile = fopen(full_path, "rb");
 				if(exeFile)
 				{
-					fseek(exeFile, 0, SEEK_END);
-					u32 exeSize = ftell(exeFile);
-					rewind(exeFile);
-					if(exeSize)
-					{
-						fread(EXECUTE_ADDR, 1, exeSize, exeFile);
-						FileFound = true;
-						DeviceFound = true; // Signals outer loop to stop completely
-					}
-					fclose(exeFile);
-					break; // Breaks out of the path choice inner loop
+					fat_file = exeFile;
+					FileFound = true;
+					DeviceFound = true;
+					break;
 				}
 			}
 		}
 	}
 
+	if(FileFound)
+	{
 #ifdef SPLASH
-	load_splash(full_path);
-	u8 * bgdata = GetImageData(splash_buf);
-	u8 * icondata = NULL;
-	if (bgdata) {
-		load_icon(full_path);
-		icondata = GetIconData(icon_buf);
-	}
-#ifdef SPLASH_FADE_IN
-	fadein(bgdata, icondata);
+		load_splash(full_path);
+		u8 * bgdata = GetImageData(splash_buf);
+		u8 * icondata = NULL;
+		if (bgdata) {
+			load_icon(full_path);
+			icondata = GetIconData(icon_buf);
+		}
+
+#if (SPLASH_FADE_IN != 0)
+		fadein(bgdata, icondata);
 #else
-	Background_Show(0, 0, 0, bgdata, icondata);
+		Background_Show(0, 0, 0, bgdata, icondata);
+#endif
 #endif
 
-#ifdef SPLASH_FADE_OUT
-	fadeout(bgdata, icondata);
-#endif
+		if(isfs_fd >= 0)
+		{
+			s32 filesize = ISFS_Seek(isfs_fd, 0, SEEK_END);
+			ISFS_Seek(isfs_fd, 0, SEEK_SET);
+			if(filesize)
+			{
+				ISFS_Read(isfs_fd, EXECUTE_ADDR, filesize);
+			}
+			ISFS_Close(isfs_fd);
+		}
+		else if(fat_file)
+		{
+			fseek(fat_file, 0, SEEK_END);
+			u32 exeSize = ftell(fat_file);
+			rewind(fat_file);
+			if(exeSize)
+			{
+				fread(EXECUTE_ADDR, 1, exeSize, fat_file);
+			}
+			fclose(fat_file);
+		}
 
+#ifdef SPLASH
+#if (SPLASH_FADE_OUT != 0)
+		fadeout(bgdata, icondata);
+		free(bgdata);
+#endif
 	StopGX();
-	free(bgdata);
 #endif
+	}
 
 	DeInitDevices();
 

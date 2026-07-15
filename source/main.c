@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 	memset(full_path, 0, ISFS_MAXPATH);
 
 	s32 isfs_fd = -1;
-	FILE *fat_file = NULL;
+	FILE *fatFile = NULL;
 	bool FileFound = false;
 
 #ifdef SPLASH
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
 				FILE *exeFile = fopen(full_path, "rb");
 				if(exeFile)
 				{
-					fat_file = exeFile;
+					fatFile = exeFile;
 					FileFound = true;
 					DeviceFound = true;
 					break;
@@ -416,16 +416,16 @@ int main(int argc, char *argv[])
 			}
 			ISFS_Close(isfs_fd);
 		}
-		else if(fat_file)
+		else if(fatFile)
 		{
-			fseek(fat_file, 0, SEEK_END);
-			u32 exeSize = ftell(fat_file);
-			rewind(fat_file);
+			fseek(fatFile, 0, SEEK_END);
+			u32 exeSize = ftell(fatFile);
+			rewind(fatFile);
 			if(exeSize)
 			{
-				fread(EXECUTE_ADDR, 1, exeSize, fat_file);
+				fread(EXECUTE_ADDR, 1, exeSize, fatFile);
 			}
-			fclose(fat_file);
+			fclose(fatFile);
 		}
 
 #ifdef SPLASH

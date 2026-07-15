@@ -38,6 +38,7 @@
 #include "splash.h"
 #include "devicemounter.h"
 #include "video.h"
+#include "config.h"
 
 #define EXECUTE_ADDR	((u8 *)0x92000000)
 #define BOOTER_ADDR		((u8 *)0x93000000)
@@ -59,8 +60,12 @@ u8 *splash_buf = NULL;
 typedef void (*entrypoint) (void);
 #include "app_booter_bin.h"
 
-#define PATH_COUNT 2
-static const char *Paths[PATH_COUNT] = { "/apps/usbloader_gx/boot.dol", "/apps/usbloader_gx/boot.elf" };
+static const char* const PATHS[] = {
+	"/apps/korbodonut/boot.dol",
+	"/apps/korbodonut/boot.elf"
+};
+
+static const int PATH_COUNT = sizeof(PATHS) / sizeof(PATHS[0]);
 
 void SystemMenu()
 {
@@ -345,7 +350,7 @@ int main(int argc, char *argv[])
 	ISFS_Initialize();
 	for(u8 i = 0; i < PATH_COUNT; i++)
 	{
-		strcpy(full_path, Paths[i]);
+		strcpy(full_path, PATHS[i]);
 		s32 fd = ISFS_Open(full_path, ISFS_OPEN_READ);
 		if(fd >= 0)
 		{
@@ -374,7 +379,7 @@ int main(int argc, char *argv[])
 
 			for(u8 i = 0; i < PATH_COUNT; i++)
 			{
-				sprintf(full_path, "%s:%s", DeviceName[dev], Paths[i]);
+				sprintf(full_path, "%s:%s", DeviceName[dev], PATHS[i]);
 				FILE *exeFile = fopen(full_path, "rb");
 				if(exeFile)
 				{

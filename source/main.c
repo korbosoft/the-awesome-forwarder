@@ -60,12 +60,12 @@ u8 *splash_buf = NULL;
 typedef void (*entrypoint) (void);
 #include "app_booter_bin.h"
 
-static const char* const PATHS[] = {
+#define PATH_COUNT 2
+
+static const char* const PATHS[PATH_COUNT] = {
 	"/apps/korbodonut/boot.dol",
 	"/apps/korbodonut/boot.elf"
 };
-
-static const int PATH_COUNT = sizeof(PATHS) / sizeof(PATHS[0]);
 
 void SystemMenu()
 {
